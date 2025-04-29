@@ -1,5 +1,7 @@
 package com.alianza.Client_back.service.implementacion;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +32,7 @@ import java.util.Optional;
 public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
+    private static final Logger logger = LoggerFactory.getLogger(ClientServiceImpl.class);
 
     public ClientServiceImpl(ClientRepository clientRepository) {
         this.clientRepository = clientRepository;
@@ -38,9 +41,11 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public ContractResponse<Client> saveClient(ContractRequest<MOClient> clientRequest) {
         ContractResponse<Client> response = new ContractResponse<>();
+        logger.info("ClientService - saveClient - Datos de entrada: {}", clientRequest);
         Client vClient = new Client();
         try {
             if (clientRequest == null || clientRequest.getData() == null) {
+                logger.warn("ClientService - saveClient - Faltan datos: {}", ErrorMessages.MISSING_REQUIRED_FIELDS);
                 response.setErrorMessage(ErrorMessages.MISSING_REQUIRED_FIELDS);
                 response.setStatus("error");
                 response.setData(null);
@@ -49,9 +54,9 @@ public class ClientServiceImpl implements ClientService {
 
             MOClient client = clientRequest.getData();
 
-            if (  client.getBusinessId() == null || client.getBusinessId().isEmpty() ||
+            if (client.getBusinessId() == null || client.getBusinessId().isEmpty() ||
                     client.getEmail() == null || client.getEmail().isEmpty()) {
-
+                logger.warn("ClientService - saveClient - Cliente no valido: {}", ErrorMessages.INVALID_CLIENT_DATA);
                 response.setErrorMessage(ErrorMessages.INVALID_CLIENT_DATA);
                 response.setStatus("error");
                 response.setData(null);
@@ -65,17 +70,18 @@ public class ClientServiceImpl implements ClientService {
             vClient.setEndDate(client.getEndDate());
             vClient.setStartDate(client.getStartDate());
             vClient.setCreatedAt(LocalDateTime.now());
-
-        
+            logger.info("ClientService - saveClient - Datos a guardar: {}", vClient);
 
             if (clientRepository.existsById(vClient.getSharedKey())) {
                 response.setErrorMessage(ErrorMessages.CLIENT_ALREADY_EXISTS);
+                logger.warn("ClientService - saveClient - SharedKey existe: {}", ErrorMessages.CLIENT_ALREADY_EXISTS);
                 response.setStatus("error");
                 response.setData(null);
                 return response;
             }
 
             Client savedClient = clientRepository.save(vClient);
+            logger.info("ClientService - saveClient - Cliente guardado exitosamente.");
 
             response.setSuccessMessage("Cliente guardado exitosamente.");
             response.setStatus("success");
@@ -83,6 +89,8 @@ public class ClientServiceImpl implements ClientService {
 
         } catch (Exception ex) {
             response.setErrorMessage(ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
+            logger.warn("ClientService - saveClient - Internal error: {}",
+                    ErrorMessages.INTERNAL_SERVER_ERROR + " " + ex.getMessage());
             response.setStatus("error");
             response.setData(null);
         }
@@ -90,10 +98,10 @@ public class ClientServiceImpl implements ClientService {
         return response;
     }
 
-
     @Override
     public ContractResponse<Client> getClientBySharedKey(ContractRequest<String> sharedKeyRequest) {
         ContractResponse<Client> response = new ContractResponse<>();
+        logger.info("ClientService - getClientBySharedKey - Datos de entrada: {}", sharedKeyRequest);
 
         try {
             if (sharedKeyRequest == null || sharedKeyRequest.getData() == null
@@ -106,51 +114,60 @@ public class ClientServiceImpl implements ClientService {
             Optional<Client> optionalClient = clientRepository.findById(sharedKeyRequest.getData());
 
             if (optionalClient.isPresent()) {
+                logger.info("ClientService - getClientBySharedKey - cliente encontrado: {}", optionalClient);
                 response.setSuccessMessage("Cliente encontrado.");
                 response.setStatus("success");
                 response.setData(optionalClient.get());
             } else {
+                logger.info("ClientService - getClientBySharedKey - cliente no encontrado: {}",
+                        ErrorMessages.CLIENT_NOT_FOUND);
                 response.setErrorMessage(ErrorMessages.CLIENT_NOT_FOUND);
                 response.setStatus("error");
             }
 
         } catch (Exception ex) {
             response.setErrorMessage(ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
+            logger.warn("ClientService - getClientBySharedKey - Error : {}",
+                    ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
+
             response.setStatus("error");
         }
 
         return response;
     }
-
 
     @Override
     public ContractResponse<List<Client>> getAllClients() {
         ContractResponse<List<Client>> response = new ContractResponse<>();
-        
+
         try {
             List<Client> clients = clientRepository.findAll();
-    
+
             if (clients.isEmpty()) {
                 response.setStatus("warning");
                 response.setErrorMessage(ErrorMessages.CLIENT_NOT_FOUND);
-                response.setData(null);  
+                logger.warn("ClientService - getAllClients - No hay clientes: {}", ErrorMessages.CLIENT_NOT_FOUND);
+                response.setData(null);
             } else {
-                
+
                 response.setStatus("success");
                 response.setSuccessMessage("Clientes obtenidos exitosamente.");
-                response.setData(clients);  
+                logger.info("ClientService - getAllClients - Clientes obtenidos exitosamente. {}", clients);
+
+                response.setData(clients);
             }
-    
+
         } catch (Exception ex) {
-           
+
             response.setStatus("error");
             response.setErrorMessage(ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
+            logger.warn("ClientService - getAllClients - Error : {}",
+            ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
             response.setData(null);
         }
-    
+
         return response;
     }
-
 
     private File generateCsvFile() throws IOException {
         List<Client> clients = clientRepository.findAll();
@@ -175,22 +192,23 @@ public class ClientServiceImpl implements ClientService {
                         client.getPhoneNumber(),
                         client.getCreatedAt(),
                         client.getStartDate(),
-                        client.getEndDate()
-                );
+                        client.getEndDate());
             }
         }
+        logger.info("ClientService - generateCsvFile - Escritura de datos.: {}", csvFile);
 
         return csvFile;
     }
 
     public ContractResponse<String> getCsvFileAsBase64() throws IOException {
-        ContractResponse<String> response = new ContractResponse<>();   
+        ContractResponse<String> response = new ContractResponse<>();
         File csvFile = generateCsvFile();
         byte[] fileContent = Files.readAllBytes(csvFile.toPath());
         response.setData(Base64.getEncoder().encodeToString(fileContent));
+        logger.info("ClientService - getCsvFileAsBase64 - Base64generado.: {}", response);
+
         return response;
     }
-    
 
     public ContractResponse<List<Client>> searchClients(ContractRequest<SearchClientRequest> request) {
         ContractResponse<List<Client>> response = new ContractResponse<>();
@@ -217,13 +235,18 @@ public class ClientServiceImpl implements ClientService {
             if (clients.isEmpty()) {
                 response.setStatus("error");
                 response.setErrorMessage("No hay clientes con esos criterios de búsqueda.");
+                logger.warn("ClientService - getAllClients - No hay clientes con esos criterios de búsqueda.: {}", ErrorMessages.CLIENT_NOT_FOUND);
+
                 response.setData(null);
             } else {
                 response.setStatus("success");
+                logger.info("ClientService - getAllClients - listado de búsqueda.: {}", response);
                 response.setData(clients);
             }
         } catch (Exception ex) {
-            response.setErrorMessage("Internal Server Error: " + ex.getMessage());
+            response.setErrorMessage(ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
+            logger.warn("ClientService - searchClients - Error : {}",
+            ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
             response.setStatus("error");
             response.setData(null);
         }
