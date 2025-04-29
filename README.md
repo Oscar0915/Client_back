@@ -37,6 +37,9 @@ mvn clean package
 Se utiliza render para el despliegue, el cual se ejecuta despues de cada commit
 
 
+## swagger 
+http://localhost:8080/swagger-ui/index.html#
+
 
 
 
