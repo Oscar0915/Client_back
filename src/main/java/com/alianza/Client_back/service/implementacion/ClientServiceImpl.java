@@ -4,11 +4,23 @@ import org.springframework.stereotype.Service;
 
 import com.alianza.Client_back.repository.ClientRepository;
 import com.alianza.Client_back.service.ClientService;
+import com.alianza.Client_back.utils.ClientKeyUtil;
 import com.alianza.Client_back.dto.ContractRequest;
 import com.alianza.Client_back.dto.ContractResponse;
+import com.alianza.Client_back.dto.client.MOClient;
 import com.alianza.Client_back.dto.errors.ErrorMessages;
 import com.alianza.Client_back.entity.Client;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,9 +34,10 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ContractResponse<Client> saveClient(ContractRequest<Client> clientRequest) {
+    public ContractResponse<Client> saveClient(ContractRequest<MOClient> clientRequest) {
         ContractResponse<Client> response = new ContractResponse<>();
-
+        Client vClient = new Client();
+        int vAttempt = 1;
         try {
             if (clientRequest == null || clientRequest.getData() == null) {
                 response.setErrorMessage(ErrorMessages.MISSING_REQUIRED_FIELDS);
@@ -33,10 +46,9 @@ public class ClientServiceImpl implements ClientService {
                 return response;
             }
 
-            Client client = clientRequest.getData();
+            MOClient client = clientRequest.getData();
 
-            if (client.getSharedKey() == null || client.getSharedKey().isEmpty() ||
-                    client.getBusinessId() == null || client.getBusinessId().isEmpty() ||
+            if (  client.getBusinessId() == null || client.getBusinessId().isEmpty() ||
                     client.getEmail() == null || client.getEmail().isEmpty()) {
 
                 response.setErrorMessage(ErrorMessages.INVALID_CLIENT_DATA);
@@ -45,14 +57,26 @@ public class ClientServiceImpl implements ClientService {
                 return response;
             }
 
-            if (clientRepository.existsById(client.getSharedKey())) {
+            vClient.setSharedKey(ClientKeyUtil.generateSharedKey(client.getBusinessId(), vAttempt));
+            vClient.setBusinessId(client.getBusinessId());
+            vClient.setEmail(client.getEmail());
+            vClient.setPhoneNumber(client.getPhoneNumber());
+            vClient.setEndDate(client.getEndDate());
+            vClient.setStartDate(client.getStartDate());
+            vClient.setCreatedAt(LocalDateTime.now());
+
+            while (clientRepository.existsById(vClient.getSharedKey())) {
+                vClient.setSharedKey(ClientKeyUtil.generateSharedKey(client.getBusinessId(), ++vAttempt));
+            }
+
+            if (clientRepository.existsById(vClient.getSharedKey())) {
                 response.setErrorMessage(ErrorMessages.CLIENT_ALREADY_EXISTS);
                 response.setStatus("error");
                 response.setData(null);
                 return response;
             }
 
-            Client savedClient = clientRepository.save(client);
+            Client savedClient = clientRepository.save(vClient);
 
             response.setSuccessMessage("Cliente guardado exitosamente.");
             response.setStatus("success");
@@ -182,6 +206,48 @@ public class ClientServiceImpl implements ClientService {
             response.setData(null);
         }
     
+        return response;
+    }
+
+
+    private File generateCsvFile() throws IOException {
+        List<Client> clients = clientRepository.findAll();
+
+        File directory = new File("files");
+        if (!directory.exists()) {
+            directory.mkdirs();
+        }
+
+        File csvFile = new File(directory, "clients.csv");
+
+        try (PrintWriter writer = new PrintWriter(
+                new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
+
+            // Encabezados
+            writer.println("sharedKey,businessId,email,phoneNumber,createdAt,startDate,endDate");
+
+            // Filas
+            for (Client client : clients) {
+                writer.printf("%s,%s,%s,%s,%s,%s,%s%n",
+                        client.getSharedKey(),
+                        client.getBusinessId(),
+                        client.getEmail(),
+                        client.getPhoneNumber(),
+                        client.getCreatedAt(),
+                        client.getStartDate(),
+                        client.getEndDate()
+                );
+            }
+        }
+
+        return csvFile;
+    }
+
+    public ContractResponse<String> getCsvFileAsBase64() throws IOException {
+        ContractResponse<String> response = new ContractResponse<>();   
+        File csvFile = generateCsvFile();
+        byte[] fileContent = Files.readAllBytes(csvFile.toPath());
+        response.setData(Base64.getEncoder().encodeToString(fileContent));
         return response;
     }
     
