@@ -1,13 +1,16 @@
 package com.alianza.Client_back.service.implementacion;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import com.alianza.Client_back.repository.ClientRepository;
 import com.alianza.Client_back.service.ClientService;
+import com.alianza.Client_back.specification.ClientSpecification;
 import com.alianza.Client_back.utils.ClientKeyUtil;
 import com.alianza.Client_back.dto.ContractRequest;
 import com.alianza.Client_back.dto.ContractResponse;
 import com.alianza.Client_back.dto.client.MOClient;
+import com.alianza.Client_back.dto.client.SearchClientRequest;
 import com.alianza.Client_back.dto.errors.ErrorMessages;
 import com.alianza.Client_back.entity.Client;
 
@@ -87,29 +90,6 @@ public class ClientServiceImpl implements ClientService {
         return response;
     }
 
-    public ContractResponse<Boolean> deleteClient(String sharedKey) {
-        ContractResponse<Boolean> response = new ContractResponse<Boolean>();
-        try {
-            Optional<Client> client = clientRepository.findById(sharedKey);
-
-            if (client.isPresent()) {
-                clientRepository.deleteById(sharedKey);
-                response.setSuccessMessage("Cliente eliminado exitosamente.");
-                response.setStatus("success");
-                response.setData(null);
-            } else {
-                response.setErrorMessage(ErrorMessages.CLIENT_NOT_FOUND);
-                response.setStatus("error");
-                response.setData(null);
-            }
-
-        } catch (Exception e) {
-            response.setErrorMessage(ErrorMessages.INTERNAL_SERVER_ERROR);
-            response.setStatus("error");
-            response.setData(null);
-        }
-        return response;
-    }
 
     @Override
     public ContractResponse<Client> getClientBySharedKey(ContractRequest<String> sharedKeyRequest) {
@@ -142,40 +122,6 @@ public class ClientServiceImpl implements ClientService {
         return response;
     }
 
-    @Override
-    public ContractResponse<Boolean> deleteClient(ContractRequest<String> sharedKeyRequest) {
-        ContractResponse<Boolean> response = new ContractResponse<>();
-
-        try {
-            String sharedKey = sharedKeyRequest.getData();
-
-            if (sharedKey == null || sharedKey.isEmpty()) {
-                response.setErrorMessage(ErrorMessages.MISSING_REQUIRED_FIELDS);
-                response.setStatus("error");
-                response.setData(false);
-                return response;
-            }
-
-            Optional<Client> clientOpt = clientRepository.findById(sharedKey);
-            if (clientOpt.isPresent()) {
-                clientRepository.deleteById(sharedKey);
-                response.setSuccessMessage("Cliente eliminado exitosamente.");
-                response.setStatus("success");
-                response.setData(true);
-            } else {
-                response.setErrorMessage(ErrorMessages.CLIENT_NOT_FOUND);
-                response.setStatus("error");
-                response.setData(false);
-            }
-
-        } catch (Exception ex) {
-            response.setErrorMessage(ErrorMessages.INTERNAL_SERVER_ERROR + " Detalles: " + ex.getMessage());
-            response.setStatus("error");
-            response.setData(false);
-        }
-
-        return response;
-    }
 
     @Override
     public ContractResponse<List<Client>> getAllClients() {
@@ -219,10 +165,8 @@ public class ClientServiceImpl implements ClientService {
         try (PrintWriter writer = new PrintWriter(
                 new OutputStreamWriter(new FileOutputStream(csvFile), StandardCharsets.UTF_8))) {
 
-            // Encabezados
             writer.println("sharedKey,businessId,email,phoneNumber,createdAt,startDate,endDate");
 
-            // Filas
             for (Client client : clients) {
                 writer.printf("%s,%s,%s,%s,%s,%s,%s%n",
                         client.getSharedKey(),
@@ -247,5 +191,44 @@ public class ClientServiceImpl implements ClientService {
         return response;
     }
     
+
+    public ContractResponse<List<Client>> searchClients(ContractRequest<SearchClientRequest> request) {
+        ContractResponse<List<Client>> response = new ContractResponse<>();
+
+        try {
+            SearchClientRequest searchRequest = request.getData();
+            Specification<Client> specification = Specification.where(null);
+
+            if (searchRequest.getBusinessId() != null && !searchRequest.getBusinessId().isEmpty()) {
+                specification = specification.and(ClientSpecification.hasBusinessId(searchRequest.getBusinessId()));
+            }
+            if (searchRequest.getEmail() != null && !searchRequest.getEmail().isEmpty()) {
+                specification = specification.and(ClientSpecification.hasEmail(searchRequest.getEmail()));
+            }
+            if (searchRequest.getStartDate() != null) {
+                specification = specification.and(ClientSpecification.hasStartDate(searchRequest.getStartDate()));
+            }
+            if (searchRequest.getEndDate() != null) {
+                specification = specification.and(ClientSpecification.hasEndDate(searchRequest.getEndDate()));
+            }
+
+            List<Client> clients = clientRepository.findAll(specification);
+
+            if (clients.isEmpty()) {
+                response.setStatus("error");
+                response.setErrorMessage("No hay clientes con esos criterios de búsqueda.");
+                response.setData(null);
+            } else {
+                response.setStatus("success");
+                response.setData(clients);
+            }
+        } catch (Exception ex) {
+            response.setErrorMessage("Internal Server Error: " + ex.getMessage());
+            response.setStatus("error");
+            response.setData(null);
+        }
+
+        return response;
+    }
 
 }

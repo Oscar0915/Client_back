@@ -15,7 +15,7 @@ class ClientKeyUtilTest {
     @Test
     void testGenerateSharedKeyWithMultipleNames() {
         String fullName = "Luis Fernando Hernández Martínez";
-        String expectedKey = "lfernando";  // porque se toma la primera y la segunda palabra
+        String expectedKey = "lfernando";  
         String actualKey = ClientKeyUtil.generateSharedKey(fullName);
         assertEquals(expectedKey, actualKey);
     }

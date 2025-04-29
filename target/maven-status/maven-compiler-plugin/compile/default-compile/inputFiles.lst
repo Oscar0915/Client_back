@@ -2,6 +2,7 @@ C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\config\SwaggerConfig.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\controller\ClientController.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\dto\client\MOClient.java
+C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\dto\client\SearchClientRequest.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\dto\ContractRequest.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\dto\ContractResponse.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\dto\errors\ErrorMessages.java
@@ -9,4 +10,5 @@ C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\repository\ClientRepository.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\service\ClientService.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\service\implementacion\ClientServiceImpl.java
+C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\specification\ClientSpecification.java
 C:\Users\oscar\Documents\Proyectos\Prueba ALIANZA\Client_back\src\main\java\com\alianza\Client_back\utils\ClientKeyUtil.java

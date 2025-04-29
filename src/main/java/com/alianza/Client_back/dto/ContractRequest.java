@@ -3,7 +3,11 @@ package com.alianza.Client_back.dto;
 public class ContractRequest <T> {
     public String token;
     public T data;
-
+    public ContractRequest(T data) {
+        this.data = data;
+    }
+    public ContractRequest() {
+    }
     
     public String getToken() {
         return token;
@@ -20,4 +24,5 @@ public class ContractRequest <T> {
     public void setData(T data) {
         this.data = data;
     }
+
 }

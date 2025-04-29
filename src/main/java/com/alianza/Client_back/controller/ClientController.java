@@ -1,11 +1,13 @@
 package com.alianza.Client_back.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import com.alianza.Client_back.dto.ContractRequest;
 import com.alianza.Client_back.dto.ContractResponse;
 import com.alianza.Client_back.dto.client.MOClient;
+import com.alianza.Client_back.dto.client.SearchClientRequest;
 import com.alianza.Client_back.entity.Client;
 import com.alianza.Client_back.service.ClientService;
 
@@ -33,13 +35,7 @@ public class ClientController {
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/delete")
-    @Operation(summary = "Eliminar cliente por sharedKey")
-    public ResponseEntity<ContractResponse<Boolean>> deleteClient(
-            @RequestBody ContractRequest<String> sharedKeyRequest) {
-        ContractResponse<Boolean> response = clientService.deleteClient(sharedKeyRequest);
-        return ResponseEntity.ok(response);
-    }
+   
 
     @PostMapping("/find")
     @Operation(summary = "Buscar cliente por sharedKey")
@@ -60,9 +56,24 @@ public class ClientController {
 
 
    @GetMapping("/export")
+   @Operation(summary = "Exportar listado para csv en base64 ")
     public ContractResponse<String> getClientsCsvAsBase64() throws Exception {
         ContractResponse<String> response = clientService.getCsvFileAsBase64();
         return response;
     }
 
+
+    @PostMapping("/search")
+    @Operation(summary = "Buscar clientes por criterios de búsqueda")
+    public ResponseEntity<ContractResponse<List<Client>>> searchClients(
+            @RequestBody ContractRequest<SearchClientRequest> request) {
+        
+        ContractResponse<List<Client>> response = clientService.searchClients(request);
+
+        if ("success".equalsIgnoreCase(response.getStatus())) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+        }
+    }
 }

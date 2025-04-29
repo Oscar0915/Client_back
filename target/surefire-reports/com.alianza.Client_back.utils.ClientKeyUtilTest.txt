@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.alianza.Client_back.utils.ClientKeyUtilTest
 -------------------------------------------------------------------------------
-Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.027 s -- in com.alianza.Client_back.utils.ClientKeyUtilTest
+Tests run: 6, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.115 s -- in com.alianza.Client_back.utils.ClientKeyUtilTest

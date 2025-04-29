@@ -3,7 +3,9 @@ com\alianza\Client_back\controller\ClientController.class
 com\alianza\Client_back\repository\ClientRepository.class
 com\alianza\Client_back\dto\errors\ErrorMessages.class
 com\alianza\Client_back\entity\Client.class
+com\alianza\Client_back\specification\ClientSpecification.class
 com\alianza\Client_back\dto\ContractRequest.class
+com\alianza\Client_back\dto\client\SearchClientRequest.class
 com\alianza\Client_back\dto\ContractResponse.class
 com\alianza\Client_back\service\implementacion\ClientServiceImpl.class
 com\alianza\Client_back\service\ClientService.class
