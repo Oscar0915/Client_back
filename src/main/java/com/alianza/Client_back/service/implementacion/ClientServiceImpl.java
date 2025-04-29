@@ -11,7 +11,6 @@ import com.alianza.Client_back.dto.client.MOClient;
 import com.alianza.Client_back.dto.errors.ErrorMessages;
 import com.alianza.Client_back.entity.Client;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
