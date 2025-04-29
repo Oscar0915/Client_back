@@ -36,7 +36,6 @@ public class ClientServiceImpl implements ClientService {
     public ContractResponse<Client> saveClient(ContractRequest<MOClient> clientRequest) {
         ContractResponse<Client> response = new ContractResponse<>();
         Client vClient = new Client();
-        int vAttempt = 1;
         try {
             if (clientRequest == null || clientRequest.getData() == null) {
                 response.setErrorMessage(ErrorMessages.MISSING_REQUIRED_FIELDS);
@@ -56,7 +55,7 @@ public class ClientServiceImpl implements ClientService {
                 return response;
             }
 
-            vClient.setSharedKey(ClientKeyUtil.generateSharedKey(client.getBusinessId(), vAttempt));
+            vClient.setSharedKey(ClientKeyUtil.generateSharedKey(client.getBusinessId()));
             vClient.setBusinessId(client.getBusinessId());
             vClient.setEmail(client.getEmail());
             vClient.setPhoneNumber(client.getPhoneNumber());
@@ -64,9 +63,7 @@ public class ClientServiceImpl implements ClientService {
             vClient.setStartDate(client.getStartDate());
             vClient.setCreatedAt(LocalDateTime.now());
 
-            while (clientRepository.existsById(vClient.getSharedKey())) {
-                vClient.setSharedKey(ClientKeyUtil.generateSharedKey(client.getBusinessId(), ++vAttempt));
-            }
+        
 
             if (clientRepository.existsById(vClient.getSharedKey())) {
                 response.setErrorMessage(ErrorMessages.CLIENT_ALREADY_EXISTS);

@@ -1,7 +1,6 @@
 package com.alianza.Client_back.dto.client;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 
 public class MOClient {
